@@ -276,3 +276,6 @@ __pycache__/
 /AzureLogShipper.FunctionApp/Properties/launchSettings.json
 /AzureLogShipper.FunctionApp/Properties/serviceDependencies.json
 /AzureLogShipper.FunctionApp/Properties/serviceDependencies.local.json
+/AzureLogShipper/obj/project.nuget.cache
+/AzureLogShipper/obj/project.assets.json
+/AzureLogShipper/obj/AzureLogShipper.csproj.nuget.dgspec.json
