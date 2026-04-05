@@ -8,7 +8,7 @@
 
 		<!-- NuGet Package Metadata -->
 		<PackageId>AzureLogShipper</PackageId>
-		<Version>1.0.1</Version>
+		<Version>1.0.3</Version>
 		<Authors>Ashish Kapoor</Authors>
 		<Company>Ashish Kapoor</Company>
 		<Owners>ashishkapoor2000</Owners>

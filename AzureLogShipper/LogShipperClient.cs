@@ -14,6 +14,14 @@ using System.Text.Json;
 /// <c>AzureLogShipper.Models</c>.
 /// Supports Workspace Key (HMAC-SHA256) and Azure AD (Entra ID) authentication.
 /// </summary>
+
+
+/// <summary>
+/// Sends any serializable log object to an Azure Log Analytics custom table.
+/// Use your own POCO or the built-in <c>MonitoringLog</c> from
+/// <c>AzureLogShipper.Models</c>.
+/// Supports Workspace Key (HMAC-SHA256) and Azure AD (Entra ID) authentication.
+/// </summary>
 public sealed class LogShipperClient : IDisposable
 {
     private static readonly JsonSerializerOptions _jsonOptions = new()
@@ -80,16 +88,19 @@ public sealed class LogShipperClient : IDisposable
         if (string.IsNullOrWhiteSpace(_options.SharedKey))
             throw new InvalidOperationException("SharedKey is required for WorkspaceKey auth.");
 
-        var signature = BuildHmacSignature(bodyBytes.Length, dateString, _options.SharedKey);
-        var authHeader = $"SharedKey {_options.WorkspaceId}:{signature}";
+        // Use UTF8 without BOM — must match exactly what is sent over the wire
+        var utf8NoBom = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false);
+        var exactBytes = utf8NoBom.GetBytes(body);
 
+        var signature = BuildHmacSignature(exactBytes.Length, dateString, _options.SharedKey);
+        var authHeader = $"SharedKey {_options.WorkspaceId}:{signature}";
         var url = $"https://{_options.WorkspaceId}.ods.opinsights.azure.com/api/logs?api-version=2016-04-01";
 
-        var content = new StringContent(body, Encoding.UTF8, "application/json");
+        var content = new ByteArrayContent(exactBytes);
+        content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
+        content.Headers.ContentLength = exactBytes.Length;
 
         var req = new HttpRequestMessage(HttpMethod.Post, url) { Content = content };
-
-        // Headers must exactly match the StringToSign order
         req.Headers.Add("Log-Type", logType);
         req.Headers.Add("x-ms-date", dateString);
         req.Headers.Add("time-generated-field", "eventId");
