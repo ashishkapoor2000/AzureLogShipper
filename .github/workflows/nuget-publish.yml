@@ -1,4 +1,4 @@
-name: Publish to NuGet
+name: Publish AzureLogShipper to NuGet
 
 on:
   push:
@@ -29,9 +29,9 @@ jobs:
 
       - name: Pack
         run: |
-          # Strip the leading "v" from the tag name (v1.2.3 → 1.2.3)
           VERSION="${GITHUB_REF_NAME#v}"
-          dotnet pack --configuration Release --no-build \
+          dotnet pack AzureLogShipper/AzureLogShipper.csproj \
+            --configuration Release \
             -p:Version=$VERSION \
             --output ./nupkgs
 
@@ -41,3 +41,5 @@ jobs:
             --api-key ${{ secrets.NUGET_API_KEY }} \
             --source https://api.nuget.org/v3/index.json \
             --skip-duplicate
+        env:
+          NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
