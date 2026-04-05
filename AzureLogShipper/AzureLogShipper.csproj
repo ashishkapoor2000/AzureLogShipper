@@ -1,0 +1,36 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>net8.0</TargetFramework>
+		<Nullable>enable</Nullable>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<LangVersion>latest</LangVersion>
+
+		<!-- NuGet Package Metadata -->
+		<PackageId>AzureLogShipper</PackageId>
+		<Version>1.0.0</Version>
+		<Authors>Ashish Kapoor</Authors>
+		<Company>Ashish Kapoor</Company>
+		<Owners>ashishkapoor2000</Owners>
+		<Description>A lightweight Azure Log Analytics client for shipping structured logs to custom tables. Supports both Workspace Key (HMAC) and Azure AD (Entra ID) authentication. Bring your own log model or use the built-in MonitoringLog.</Description>
+		<PackageTags>azure;loganalytics;monitoring;logging;nuget;log-shipper</PackageTags>
+		<PackageLicenseExpression>MIT</PackageLicenseExpression>
+		<PackageProjectUrl>https://github.com/ashishkapoor2000/AzureLogShipper</PackageProjectUrl>
+		<RepositoryUrl>https://github.com/ashishkapoor2000/AzureLogShipper</RepositoryUrl>
+		<RepositoryType>git</RepositoryType>
+		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+		<PackageReadmeFile>README.md</PackageReadmeFile>
+		<PublishRepositoryUrl>true</PublishRepositoryUrl>
+		<EmbedUntrackedSources>true</EmbedUntrackedSources>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Azure.Identity" Version="1.13.2" />
+		<PackageReference Include="System.Text.Json" Version="9.0.0" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<None Include="README.md" Pack="true" PackagePath="\" />
+	</ItemGroup>
+
+</Project>
