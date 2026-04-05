@@ -1,0 +1,43 @@
+name: Publish to NuGet
+
+on:
+  push:
+    tags:
+      - "v*"          # triggers on: git tag v1.0.0 && git push --tags
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Restore dependencies
+        run: dotnet restore
+
+      - name: Build
+        run: dotnet build --configuration Release --no-restore
+
+      - name: Test
+        run: dotnet test --configuration Release --no-build --verbosity normal
+
+      - name: Pack
+        run: |
+          # Strip the leading "v" from the tag name (v1.2.3 → 1.2.3)
+          VERSION="${GITHUB_REF_NAME#v}"
+          dotnet pack --configuration Release --no-build \
+            -p:Version=$VERSION \
+            --output ./nupkgs
+
+      - name: Push to NuGet.org
+        run: |
+          dotnet nuget push ./nupkgs/*.nupkg \
+            --api-key ${{ secrets.NUGET_API_KEY }} \
+            --source https://api.nuget.org/v3/index.json \
+            --skip-duplicate
