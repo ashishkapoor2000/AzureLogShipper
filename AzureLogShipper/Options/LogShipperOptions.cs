@@ -57,6 +57,18 @@ namespace AzureLogShipper.Options
         /// Optional: Client secret for service-principal auth via Azure AD.
         /// </summary>
         public string? ClientSecret { get; set; }
+
+        // ── Ingestion behavior ──────────────────────────────────────────────────
+
+        /// <summary>
+        /// Optional: the serialized JSON property name (after <see cref="JsonNamingPolicy.CamelCase"/>
+        /// is applied) on your log model that holds the event's own timestamp. When set, this is sent
+        /// as the <c>time-generated-field</c> header so Log Analytics uses it for <c>TimeGenerated</c>
+        /// instead of ingestion time. Must match a property that actually exists on <c>T</c> — there is
+        /// no default, since the built-in <c>MonitoringLog</c>'s field name won't exist on arbitrary
+        /// POCOs. Leave null to use ingestion time.
+        /// </summary>
+        public string? TimeGeneratedField { get; set; }
     }
 
 }

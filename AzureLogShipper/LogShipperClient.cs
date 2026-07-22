@@ -64,7 +64,7 @@ public sealed class LogShipperClient : IDisposable
 
         using var request = _options.AuthMode == AuthMode.WorkspaceKey
             ? BuildWorkspaceKeyRequest(body, bodyBytes, dateString, logType)
-            : await BuildAzureAdRequestAsync(body, ct);
+            : await BuildAzureAdRequestAsync(body, logType, ct);
 
         var response = await _http.SendAsync(request, ct);
 
@@ -103,7 +103,8 @@ public sealed class LogShipperClient : IDisposable
         var req = new HttpRequestMessage(HttpMethod.Post, url) { Content = content };
         req.Headers.Add("Log-Type", logType);
         req.Headers.Add("x-ms-date", dateString);
-        req.Headers.Add("time-generated-field", "eventId");
+        if (!string.IsNullOrWhiteSpace(_options.TimeGeneratedField))
+            req.Headers.Add("time-generated-field", _options.TimeGeneratedField);
         req.Headers.Authorization = AuthenticationHeaderValue.Parse(authHeader);
         return req;
     }
@@ -121,7 +122,7 @@ public sealed class LogShipperClient : IDisposable
 
     // ── Azure AD (Entra ID) ────────────────────────────────────────────────
 
-    private async Task<HttpRequestMessage> BuildAzureAdRequestAsync(string body, CancellationToken ct)
+    private async Task<HttpRequestMessage> BuildAzureAdRequestAsync(string body, string logType, CancellationToken ct)
     {
         const string scope = "https://monitor.azure.com//.default";
         var tokenCtx = new TokenRequestContext([scope]);
@@ -135,6 +136,9 @@ public sealed class LogShipperClient : IDisposable
         {
             Content = new StringContent(body, Encoding.UTF8, "application/json")
         };
+        req.Headers.Add("Log-Type", logType);
+        if (!string.IsNullOrWhiteSpace(_options.TimeGeneratedField))
+            req.Headers.Add("time-generated-field", _options.TimeGeneratedField);
         req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token.Token);
         return req;
     }

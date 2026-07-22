@@ -1,16 +1,21 @@
 A lightweight .NET 8 client by Ashish Kapoor for shipping structured logs to Azure Log Analytics custom tables.
 
-Bring your own model — use any serializable POCO, or use the included MonitoringLog
-Workspace Key (HMAC-SHA256) — simple, legacy
-Azure AD / Entra ID — recommended for production (managed identity, service principal, CLI)
+- Bring your own model — use any serializable POCO, or use the included MonitoringLog
+- Workspace Key (HMAC-SHA256) — simple, legacy
+- Azure AD / Entra ID — recommended for production (managed identity, service principal, CLI)
 
+## Installation
 
-Installation
-bashdotnet add package AzureLogShipper
+```bash
+dotnet add package AzureLogShipper
+```
 
-Usage
-Bring your own model
-csharpusing AzureLogShipper;
+## Usage
+
+### Bring your own model
+
+```csharp
+using AzureLogShipper;
 using AzureLogShipper.Options;
 
 // Any POCO works — no base class or interface needed
@@ -30,8 +35,12 @@ var client = new LogShipperClient(new LogShipperOptions
 
 await client.SendAsync(new MyAppLog { Service = "OrderApi", Success = true, Message = "Done" },
     logType: "MyAppLogs");
-Or use the built-in MonitoringLog
-csharpusing AzureLogShipper.Models;
+```
+
+### Or use the built-in MonitoringLog
+
+```csharp
+using AzureLogShipper.Models;
 
 await client.SendAsync(new MonitoringLog
 {
@@ -42,15 +51,23 @@ await client.SendAsync(new MonitoringLog
     Success          = true,
     Information      = "Sync completed successfully"
 }, logType: "AmacMonitoring");
-Azure AD — Managed Identity (recommended for Azure-hosted apps)
-csharpvar client = new LogShipperClient(new LogShipperOptions
+```
+
+### Azure AD — Managed Identity (recommended for Azure-hosted apps)
+
+```csharp
+var client = new LogShipperClient(new LogShipperOptions
 {
     WorkspaceId = "<your-workspace-id>",
     AuthMode    = AuthMode.AzureAD
     // DefaultAzureCredential picks up managed identity automatically
 });
-Azure AD — Service Principal
-csharpvar client = new LogShipperClient(new LogShipperOptions
+```
+
+### Azure AD — Service Principal
+
+```csharp
+var client = new LogShipperClient(new LogShipperOptions
 {
     WorkspaceId  = "<your-workspace-id>",
     AuthMode     = AuthMode.AzureAD,
@@ -58,24 +75,62 @@ csharpvar client = new LogShipperClient(new LogShipperOptions
     ClientId     = "<client-id>",
     ClientSecret = "<client-secret>"
 });
-Batch send
-csharpvar logs = new List<MyAppLog> { log1, log2, log3 };
+```
+
+### Batch send
+
+```csharp
+var logs = new List<MyAppLog> { log1, log2, log3 };
 await client.SendAsync(logs, logType: "MyAppLogs");
+```
 
-Log Table
-Logs are sent to a custom table named <logType>_CL in your workspace.
-e.g. logType: "AmacMonitoring" → table AmacMonitoring_CL.
+### Custom event timestamp (`TimeGeneratedField`)
 
-Configuration from appsettings.json
-json{
+By default, `TimeGenerated` on ingested rows is the time Log Analytics *received* the request. If your
+model carries its own event timestamp and you want that used instead, set `TimeGeneratedField` to the
+**serialized** (camelCase) property name:
+
+```csharp
+public class MyAppLog
+{
+    public DateTime EventTimeUtc { get; set; }   // serializes to "eventTimeUtc"
+    public string Service { get; set; }
+}
+
+var client = new LogShipperClient(new LogShipperOptions
+{
+    WorkspaceId        = "<your-workspace-id>",
+    AuthMode           = AuthMode.WorkspaceKey,
+    SharedKey          = "<your-shared-key>",
+    TimeGeneratedField = "eventTimeUtc"
+});
+```
+
+Leave it unset if you're not sure what your model serializes to — a mismatched field name means Log
+Analytics can't find it and silently falls back to ingestion time.
+
+## Log Table
+
+Logs are sent to a custom table named `<logType>_CL` in your workspace.
+e.g. `logType: "AmacMonitoring"` → table `AmacMonitoring_CL`.
+
+## Configuration from appsettings.json
+
+```json
+{
   "AzureLogShipper": {
     "WorkspaceId": "<workspace-id>",
     "AuthMode": "WorkspaceKey",
     "SharedKey": "<shared-key>"
   }
 }
-csharpvar opts = builder.Configuration.GetSection("AzureLogShipper").Get<LogShipperOptions>();
-builder.Services.AddSingleton(new LogShipperClient(opts!));
+```
 
-License
+```csharp
+var opts = builder.Configuration.GetSection("AzureLogShipper").Get<LogShipperOptions>();
+builder.Services.AddSingleton(new LogShipperClient(opts!));
+```
+
+## License
+
 MIT © Ashish Kapoor
