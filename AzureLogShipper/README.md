@@ -84,16 +84,23 @@ var logs = new List<MyAppLog> { log1, log2, log3 };
 await client.SendAsync(logs, logType: "MyAppLogs");
 ```
 
+### Field names on the wire
+
+Your POCO's property names are sent as-is — no casing transform is applied. `CorrelationKey` stays
+`CorrelationKey`, not `correlationKey`. Use `[JsonPropertyName("...")]` on a property if you want to
+override its serialized name. (The bundled `AzureLogShipper.Models.MonitoringLog` already does this on
+every property, so it always serializes the same way regardless of your own models.)
+
 ### Custom event timestamp (`TimeGeneratedField`)
 
 By default, `TimeGenerated` on ingested rows is the time Log Analytics *received* the request. If your
 model carries its own event timestamp and you want that used instead, set `TimeGeneratedField` to the
-**serialized** (camelCase) property name:
+**serialized** property name (same as your C# property name, unless overridden with `[JsonPropertyName]`):
 
 ```csharp
 public class MyAppLog
 {
-    public DateTime EventTimeUtc { get; set; }   // serializes to "eventTimeUtc"
+    public DateTime EventTimeUtc { get; set; }   // serializes to "EventTimeUtc"
     public string Service { get; set; }
 }
 
@@ -102,7 +109,7 @@ var client = new LogShipperClient(new LogShipperOptions
     WorkspaceId        = "<your-workspace-id>",
     AuthMode           = AuthMode.WorkspaceKey,
     SharedKey          = "<your-shared-key>",
-    TimeGeneratedField = "eventTimeUtc"
+    TimeGeneratedField = "EventTimeUtc"
 });
 ```
 

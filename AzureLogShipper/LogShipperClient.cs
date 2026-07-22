@@ -24,9 +24,12 @@ using System.Text.Json;
 /// </summary>
 public sealed class LogShipperClient : IDisposable
 {
+    // No PropertyNamingPolicy: your POCO's own property names are used as-is (matching the
+    // .NET/Newtonsoft convention most existing Log Analytics custom tables were built with).
+    // The bundled AzureLogShipper.Models.MonitoringLog overrides this per-property via
+    // [JsonPropertyName], so it is unaffected either way.
     private static readonly JsonSerializerOptions _jsonOptions = new()
     {
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
         DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull
     };
 
